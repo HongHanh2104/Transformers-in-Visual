@@ -1,6 +1,8 @@
-from models.model import ViT
-from datasets.cifar10 import CIFAR10Dataset
-#from datasets.dogcat import DogCatDataset
+#from models.model import ViT
+from timm.models.vision_transformer import VisionTransformer
+
+#from datasets.cifar10 import CIFAR10Dataset
+from datasets.dogcat import DogCatDataset
 #from metrics import AccuracyMetric, BLEUMetric
 #from optimizers import NoamOptimizer
 from trainer import Trainer
@@ -40,12 +42,12 @@ def train(config):
     # Build dataset
     random.seed(config['seed'])
     print('Building dataset ...')
-    train_dataset = CIFAR10Dataset(
+    train_dataset = DogCatDataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='train'
                     )
-    val_dataset = CIFAR10Dataset(
+    val_dataset = DogCatDataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='val'
@@ -88,15 +90,15 @@ def train(config):
     # Define model
     random.seed(config['seed'])
     print('Building model ...')
-    model = ViT(image_size=config['model']['img_size'], 
+    model = VisionTransformer(
+                img_size=config['model']['img_size'], 
                 patch_size=config['model']['patch_size'], 
-                n_class=config['model']['n_classes'], 
-                dim=config['model']['dim'], 
-                n_layer=config['model']['n_layer'], 
-                n_head=config['model']['n_head'], 
-                mlp_dim=config['model']['mlp_dim'],
-                is_visualize=config['model']['is_visualize']
-            )
+                num_classes=config['model']['n_classes'], 
+                embed_dim=config['model']['dim'], 
+                depth=config['model']['n_layer'], 
+                num_heads=config['model']['n_head'], 
+                mlp_ratio=2.0
+                )
     model = model.to(device)
 
     # Train from pretrained if it is not None

@@ -2,9 +2,9 @@ id: ViT
 seed: 2104
 pretrained_path: null
 model:
-    img_size: 32
-    patch_size: 4
-    n_classes: 10
+    img_size: 224
+    patch_size: 16
+    n_classes: 2
     dim: 512
     n_head: 8
     n_layer: 6
@@ -23,8 +23,8 @@ optimizer:
     weight_decay: !!float 0.0
     factor: 0.1
 dataset:
-    name: CIFAR10Dataset
-    root_dir: data/cifar10/images
+    name: DogCatDataset
+    root_dir: data/dogcat
     train:
         batch_size: 10
         shuffle: True

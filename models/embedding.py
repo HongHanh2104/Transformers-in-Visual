@@ -12,13 +12,14 @@ class Embedding(nn.Module):
     def __init__(self, image_size,
                  patch_size,
                  channels,
-                 dim):
+                 dim,
+                 norm_layer=None):
         super().__init__()
 
-        img_h, img_w = check_size(image_size)
+        self.img_h, self.img_w = check_size(image_size)
         patch_h, patch_w = check_size(patch_size)
 
-        grid_size = (img_h // patch_h), (img_w // patch_w)
+        grid_size = (self.img_h // patch_h), (self.img_w // patch_w)
         n_patch = grid_size[0] * grid_size[1]
 
         self.to_patch_embedding = nn.Conv2d(
@@ -30,6 +31,8 @@ class Embedding(nn.Module):
         self.pos_embedding = nn.Parameter(torch.zeros(1, (n_patch + 1), dim))
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, dim))
+        
+        self.norm = norm_layer(dim) if norm_layer else nn.Identity()
         # n_patch = (img_h * img_w) // (patch_h * patch_w)
         # patch_dim = channels * patch_h * patch_w
         
@@ -43,9 +46,14 @@ class Embedding(nn.Module):
         # ) # x*E
 
     def forward(self, img):
+        _, _, h, w = img.shape
+        assert h == self.img_h and w == self.img_w, \
+            f"Input image size ({h}*{w}) doesn't match model ({self.img_h}*{self.img_w})."
+
         x = self.to_patch_embedding(img)
         x = x.flatten(2).transpose(1, 2) # [b, patch_size, dim]
-        
+        x = self.norm(x)
+
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = b)

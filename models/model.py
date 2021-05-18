@@ -1,10 +1,7 @@
 import torch
 from torch import nn
 
-#from einops import rearrange, repeat
-#from einops.layers.torch import Rearrange
-
-from models.transformer_encoder import TransformerEncoder
+from models.block import Block
 from models.embedding import Embedding
 
 class ViT(nn.Module):
@@ -26,32 +23,36 @@ class ViT(nn.Module):
                                    channels=channels,
                                    dim=dim)
 
-        self.transformer_encoder = TransformerEncoder(
-                                        dim=dim,
-                                        n_layer=n_layer,
-                                        n_head=n_head,
-                                        mlp_dim=mlp_dim,
-                                        drop=drop_rate,
-                                        attn_drop=attn_drop_rate,
-                                        is_visualize=is_visualize
-                                    )
+        # block of transformers encoder
+        self.blocks = nn.Sequential(*[
+                        Block(
+                            dim=dim,
+                            n_layer=n_layer,
+                            n_head=n_head,
+                            mlp_dim=mlp_dim,
+                            drop=drop_rate,
+                            attn_drop=attn_drop_rate,
+                            is_visualize=is_visualize
+                           )
+                        for i in range(n_layer)
+                ])
         
+        self.norm = nn.LayerNorm(dim)
         self.to_latent = nn.Identity()
-
-        self.mlp_head = nn.Sequential(
-            nn.LayerNorm(dim),
-            nn.Linear(dim, n_class)
-        )
+        self.head = nn.Linear(dim, n_class)
+        # self.mlp_head = nn.Sequential(
+        #     nn.LayerNorm(dim),
+        #     nn.Linear(dim, n_class)
+        # )
 
         self.dropout = nn.Dropout(drop_rate)
 
     def forward(self, img):
         x = self.embedding(img)
         x = self.dropout(x)
-        
-        x, weights = self.transformer_encoder(x)
-
+        x, weights = self.blocks(x)
+        x = self.norm(x)
         x = self.to_latent(x[:, 0])
-        x = self.mlp_head(x)
+        x = self.head(x)
         return x, weights
 

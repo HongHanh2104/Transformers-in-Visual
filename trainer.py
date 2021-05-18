@@ -72,7 +72,7 @@ class Trainer():
             self.optimizer.zero_grad()
 
             # 2: Predict
-            out, _ = self.model(img)
+            out = self.model(img)
             #print(torch.isfinite(out))
             # 3: Calculate the loss
             loss = self.loss(out, lbl)           
@@ -120,7 +120,7 @@ class Trainer():
             lbl = lbl.to(self.device)
     
             # 2: Get network outputs
-            out, _ = self.model(img)
+            out = self.model(img)
             
             # 3: Calculate the loss
             loss = self.loss(out, lbl)

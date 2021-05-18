@@ -3,14 +3,14 @@ from torch import nn
 
 from einops import rearrange
 
-class LayerNorm(nn.Module):
-    def __init__(self, dim, fn):
-        super().__init__()
-        self.layernorm = nn.LayerNorm(dim)
-        self.fn = fn
+# class LayerNorm(nn.Module):
+#     def __init__(self, dim, fn):
+#         super().__init__()
+#         self.layernorm = nn.LayerNorm(dim)
+#         self.fn = fn
     
-    def forward(self, x, **kwargs):
-        return self.fn(self.layernorm(x), **kwargs)
+#     def forward(self, x, **kwargs):
+#         return self.fn(self.layernorm(x), **kwargs)
 
 class MLP(nn.Module):
     def __init__(self, dim, mlp_dim, drop=0.):
@@ -38,7 +38,7 @@ class ScaledDotProductAttention(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.attn_drop = nn.Dropout(attn_drop)
     
-    def forward(self, q, k, v, mask=None):
+    def forward(self, q, k, v):
         # q: [b, h, n, head_dim]
         # k: [b, h, n, head_dim]
         # v: [b, h, n, head_dim]
@@ -49,16 +49,11 @@ class ScaledDotProductAttention(nn.Module):
         k_T = rearrange(k, 'b h n d -> b h d n')
         attn = (q @ k_T) * self.scale
         
-        # Step 2: Apply mask
-        if mask is not None:
-            mask = mask.unsqueeze(1) # [b, 1, k_len, k_len]
-            attn = attn.masked_fill(mask == 0, -1e-12)
-        
-        # Step 3: Pass to softmax to make [0, 1] range
+        # Step 2: Pass to softmax to make [0, 1] range
         attn = self.softmax(attn)
         attn = self.attn_drop(attn)
 
-        # Step 4: Multiply with v
+        # Step 3: Multiply with v
         scores = attn @ v
         return scores, attn
 
@@ -75,17 +70,16 @@ class MultiHeadAttention(nn.Module):
         self.dim = dim
         self.scale = head_dim ** (-0.5)
 
-        self.W_qkv = nn.Linear(dim, dim * 3, bias=False) # Wq, Wk, Wv
+        self.W_qkv = nn.Linear(dim, dim * 3, bias=True) # Wq, Wk, Wv
         
-        self.out = nn.Sequential( 
-            nn.Linear(dim, dim), #proj
-            nn.Dropout(proj_drop)
-        )
-
+        self.proj = nn.Linear(dim, dim)
+        self.proj_drop = nn.Dropout(proj_drop)
+        
         self.attention = ScaledDotProductAttention(scale=self.scale, attn_drop=attn_drop)
         
     def forward(self, x): 
         # x: [b, n, dim] 
+        #print('oeoe: ', len(x))
         b, n, _ = x.shape
         
         #  Step 1: dot product with weight matrices 
@@ -96,12 +90,13 @@ class MultiHeadAttention(nn.Module):
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = self.n_head), qkv)
         
         # Step 3: scale dot product
-        score, attn = self.attention(q, k, v, mask=None)
+        score, attn = self.attention(q, k, v)
         weights = attn if self.is_visualize else None
         
         # Step 4: concat and pass to linear layer
         score = rearrange(score, 'b h n d -> b n (h d)')
-        score = self.out(score)
+        score = self.proj(score)
+        score = self.proj_drop(score)
 
         return score, weights # score: [b, n, d]
     
