@@ -1,0 +1,33 @@
+id: ViT
+seed: 2104
+pretrained_path: null
+model:
+    img_size: 32
+    patch_size: 4
+    n_classes: 10
+    dim: 512
+    n_head: 8
+    n_layer: 6
+    mlp_dim: 1024
+    is_visualize: False
+trainer:
+    nepochs: 200
+    val_step: 1
+    log_step: 30
+    lr: !!float 1e-4
+optimizer:
+    adam_eps: !!float 1e-8
+    patience: 10
+    warmup: 10
+    clip: 1.0
+    weight_decay: !!float 0.0
+    factor: 0.1
+dataset:
+    name: CIFAR10Dataset
+    root_dir: data/cifar10/images
+    train:
+        batch_size: 10
+        shuffle: True
+        clip_grads: True
+    val:
+        batch_size: 10
