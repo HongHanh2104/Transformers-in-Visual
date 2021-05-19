@@ -8,24 +8,24 @@ if __name__ == '__main__':
     dev_id = 'cuda' if torch.cuda.is_available() else 'cpu'
     device = torch.device(dev_id)
 
-    model = VisionTransformer(
-                img_size=224,
-                patch_size=16,
-                num_classes=2,
-                embed_dim=512,
-                depth=6,
-                num_heads=8,
-                mlp_ratio=2.
-            )
+    # model = VisionTransformer(
+    #             img_size=224,
+    #             patch_size=16,
+    #             num_classes=2,
+    #             embed_dim=512,
+    #             depth=6,
+    #             num_heads=8,
+    #             mlp_ratio=2.
+    #         )
 
-    # model = ViT(image_size=224, 
-    #           patch_size=16, 
-    #           n_class=2, 
-    #           dim=512, 
-    #           n_layer=6, 
-    #           n_head=8, 
-    #           mlp_dim=1024,
-    #           is_visualize=False)
+    model = ViT(image_size=224, 
+              patch_size=16, 
+              n_class=2, 
+              dim=512, 
+              n_layer=6, 
+              n_head=8, 
+              mlp_dim=1024,
+              is_visualize=False)
 
     model = model.to('cuda')
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -35,4 +35,5 @@ if __name__ == '__main__':
     
     img = torch.randn(3, 3, 224, 224)
 
-    pred = model(img.to('cuda'))
+    pred, attn = model(img.to('cuda'))
+    print(img.shape, pred.shape, len(attn))

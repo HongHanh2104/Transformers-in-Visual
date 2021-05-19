@@ -32,7 +32,8 @@ class Trainer():
         self.train_id = self.config['id']
         self.train_id += ('-' + self.config['dataset']['name'] + '-' +  
                          'lr:' + str(self.config['trainer']['lr']) + '-' + 
-                         datetime.now().strftime('%Y_%m_%d-%H_%M_%S'))
+                         datetime.now().strftime('%Y_%m_%d-%H_%M_%S') +
+                         'with bias') 
 
         self.save_dir = os.path.join('checkpoints', self.train_id)
         if not os.path.exists(self.save_dir):
@@ -72,7 +73,7 @@ class Trainer():
             self.optimizer.zero_grad()
 
             # 2: Predict
-            out = self.model(img)
+            out, _ = self.model(img)
             #print(torch.isfinite(out))
             # 3: Calculate the loss
             loss = self.loss(out, lbl)           
@@ -120,7 +121,7 @@ class Trainer():
             lbl = lbl.to(self.device)
     
             # 2: Get network outputs
-            out = self.model(img)
+            out, _ = self.model(img)
             
             # 3: Calculate the loss
             loss = self.loss(out, lbl)

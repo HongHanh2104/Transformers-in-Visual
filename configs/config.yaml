@@ -21,7 +21,7 @@ optimizer:
     warmup: 10
     clip: 1.0
     weight_decay: !!float 0.0
-    factor: 0.1
+    factor: 0.5
 dataset:
     name: DogCatDataset
     root_dir: data/dogcat

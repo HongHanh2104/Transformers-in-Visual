@@ -1,5 +1,5 @@
-#from models.model import ViT
-from timm.models.vision_transformer import VisionTransformer
+from models.model import ViT
+#from timm.models.vision_transformer import VisionTransformer
 
 #from datasets.cifar10 import CIFAR10Dataset
 from datasets.dogcat import DogCatDataset
@@ -90,14 +90,15 @@ def train(config):
     # Define model
     random.seed(config['seed'])
     print('Building model ...')
-    model = VisionTransformer(
-                img_size=config['model']['img_size'], 
+    model = ViT(
+                image_size=config['model']['img_size'], 
                 patch_size=config['model']['patch_size'], 
-                num_classes=config['model']['n_classes'], 
-                embed_dim=config['model']['dim'], 
-                depth=config['model']['n_layer'], 
-                num_heads=config['model']['n_head'], 
-                mlp_ratio=2.0
+                n_class=config['model']['n_classes'], 
+                dim=config['model']['dim'], 
+                n_layer=config['model']['n_layer'], 
+                n_head=config['model']['n_head'], 
+                mlp_dim=1024,
+                is_visualize=config['model']['is_visualize']
                 )
     model = model.to(device)
 

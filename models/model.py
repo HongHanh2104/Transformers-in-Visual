@@ -2,7 +2,10 @@ import torch
 from torch import nn
 
 from models.block import Block
-from models.embedding import Embedding
+from models.embedding import PatchEmbedding
+from models.weight_init import trunc_normal_
+
+from einops import rearrange, repeat
 
 class ViT(nn.Module):
     def __init__(self, image_size,
@@ -18,8 +21,15 @@ class ViT(nn.Module):
                  is_visualize=False):
         super().__init__()
 
-        self.embedding = Embedding(image_size=image_size,
-                                   patch_size=patch_size,
+        self.image_size = self._check_size(image_size)
+        self.patch_size = self._check_size(patch_size)
+
+        grid_size = (self.image_size[0] // self.patch_size[0]), (self.image_size[1] // self.patch_size[1])
+        n_patch = grid_size[0] * grid_size[1]
+
+        self.patch_embedding = PatchEmbedding(
+                                   image_size=self.image_size,
+                                   patch_size=self.patch_size,
                                    channels=channels,
                                    dim=dim)
 
@@ -36,19 +46,33 @@ class ViT(nn.Module):
                            )
                         for i in range(n_layer)
                 ])
+
+        self.pos_embedding = nn.Parameter(torch.zeros(1, (n_patch + 1), dim))
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, dim))
         
         self.norm = nn.LayerNorm(dim)
         self.to_latent = nn.Identity()
         self.head = nn.Linear(dim, n_class)
-        # self.mlp_head = nn.Sequential(
-        #     nn.LayerNorm(dim),
-        #     nn.Linear(dim, n_class)
-        # )
-
         self.dropout = nn.Dropout(drop_rate)
 
+        # Weight init
+        head_bias = 0.
+        trunc_normal_(self.pos_embedding, std=.02)
+        trunc_normal_(self.cls_token, std=.02)
+        self.apply(_init_vit_weights)
+
     def forward(self, img):
-        x = self.embedding(img)
+        x = self.patch_embedding(img)
+        b, n, _ = x.shape
+
+        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = b)
+        
+        # Prepend x_class to the sequence of embedded patches
+        x = torch.cat((cls_tokens, x), dim=1) # [b, (n + 1), dim]
+        
+        # # Add pos embedding
+        x += self.pos_embedding # [b, (n + 1), dim]
+        
         x = self.dropout(x)
         x, weights = self.blocks(x)
         x = self.norm(x)
@@ -56,3 +80,46 @@ class ViT(nn.Module):
         x = self.head(x)
         return x, weights
 
+    def _init_weights(self, m):
+        # this fn left here for compat with downstream users
+        _init_vit_weights(m)
+
+    def _check_size(self, x):
+        # use for the case when the image/ the patch is not square
+        return x if isinstance(x, tuple) else (x, x)
+
+def _init_vit_weights(m, n: str = '', head_bias: float = 0., jax_impl: bool = False):
+    """
+    @ Source: https://github.com/rwightman/pytorch-image-models 
+    ViT weight initialization
+    * When called without n, head_bias, jax_impl args it will behave exactly the same
+    as my original init for compatibility with prev hparam / downstream use cases (ie DeiT).
+    * When called w/ valid n (module name) and jax_impl=True, will (hopefully) match JAX impl
+    """
+    if isinstance(m, nn.Linear):
+        if n.startswith('head'):
+            nn.init.zeros_(m.weight)
+            nn.init.constant_(m.bias, head_bias)
+        elif n.startswith('to_latent'):
+            lecun_normal_(m.weight)
+            nn.init.zeros_(m.bias)
+        else:
+            if jax_impl:
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    if 'mlp' in n:
+                        nn.init.normal_(m.bias, std=1e-6)
+                    else:
+                        nn.init.zeros_(m.bias)
+            else:
+                trunc_normal_(m.weight, std=.02)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+    elif jax_impl and isinstance(m, nn.Conv2d):
+        # NOTE conv was left to pytorch default in my original init
+        lecun_normal_(m.weight)
+        if m.bias is not None:
+            nn.init.zeros_(m.bias)
+    elif isinstance(m, nn.LayerNorm):
+        nn.init.zeros_(m.bias)
+        nn.init.ones_(m.weight)
