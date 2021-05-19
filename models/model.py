@@ -40,6 +40,7 @@ class ViT(nn.Module):
                             n_layer=n_layer,
                             n_head=n_head,
                             mlp_dim=mlp_dim,
+                            eps=1e-6,
                             drop=drop_rate,
                             attn_drop=attn_drop_rate,
                             is_visualize=is_visualize
@@ -50,13 +51,13 @@ class ViT(nn.Module):
         self.pos_embedding = nn.Parameter(torch.zeros(1, (n_patch + 1), dim))
         self.cls_token = nn.Parameter(torch.zeros(1, 1, dim))
         
-        self.norm = nn.LayerNorm(dim)
+        self.norm = nn.LayerNorm(dim, eps=1e-6)
         self.to_latent = nn.Identity()
         self.head = nn.Linear(dim, n_class)
         self.dropout = nn.Dropout(drop_rate)
 
         # Weight init
-        head_bias = 0.
+        # head_bias = 0.
         trunc_normal_(self.pos_embedding, std=.02)
         trunc_normal_(self.cls_token, std=.02)
         self.apply(_init_vit_weights)
@@ -65,15 +66,15 @@ class ViT(nn.Module):
         x = self.patch_embedding(img)
         b, n, _ = x.shape
 
-        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = b)
-        
+        cls_tokens = self.cls_token.expand(b, -1, -1)
+
         # Prepend x_class to the sequence of embedded patches
         x = torch.cat((cls_tokens, x), dim=1) # [b, (n + 1), dim]
         
         # # Add pos embedding
         x += self.pos_embedding # [b, (n + 1), dim]
-        
         x = self.dropout(x)
+
         x, weights = self.blocks(x)
         x = self.norm(x)
         x = self.to_latent(x[:, 0])

@@ -17,7 +17,7 @@ class PatchEmbedding(nn.Module):
                                 out_channels=dim,
                                 kernel_size=(patch_h, patch_w),
                                 stride=(patch_h, patch_w))
-
+        self.norm = nn.Identity()
 
     def forward(self, img):
         _, _, h, w = img.shape
@@ -26,7 +26,7 @@ class PatchEmbedding(nn.Module):
 
         x = self.to_patch_embedding(img)
         x = x.flatten(2).transpose(1, 2) # [b, patch_size, dim]
-        
+        x = self.norm(x)
         return x
 
 if __name__ == '__main__':

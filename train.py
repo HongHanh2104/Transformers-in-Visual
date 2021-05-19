@@ -97,7 +97,7 @@ def train(config):
                 dim=config['model']['dim'], 
                 n_layer=config['model']['n_layer'], 
                 n_head=config['model']['n_head'], 
-                mlp_dim=1024,
+                mlp_dim=config['model']['mlp_dim'],
                 is_visualize=config['model']['is_visualize']
                 )
     model = model.to(device)

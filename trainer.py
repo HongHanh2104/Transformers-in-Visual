@@ -33,7 +33,7 @@ class Trainer():
         self.train_id += ('-' + self.config['dataset']['name'] + '-' +  
                          'lr:' + str(self.config['trainer']['lr']) + '-' + 
                          datetime.now().strftime('%Y_%m_%d-%H_%M_%S') +
-                         'with bias') 
+                         '-with_bias') 
 
         self.save_dir = os.path.join('checkpoints', self.train_id)
         if not os.path.exists(self.save_dir):

@@ -10,6 +10,7 @@ class Block(nn.Module):
                  n_layer,
                  n_head,
                  mlp_dim,
+                 eps,
                  drop=0.,
                  attn_drop=0.,
                  is_visualize=False):
@@ -17,8 +18,8 @@ class Block(nn.Module):
 
         self.is_visualize = is_visualize
 
-        self.norm1 = nn.LayerNorm(dim)
-        self.norm2 = nn.LayerNorm(dim)
+        self.norm1 = nn.LayerNorm(dim, eps=eps)
+        self.norm2 = nn.LayerNorm(dim, eps=eps)
 
         self.attn = MultiHeadAttention(          
                         dim=dim, 
