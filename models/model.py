@@ -5,7 +5,45 @@ from models.block import Block
 from models.embedding import PatchEmbedding
 from models.weight_init import trunc_normal_
 
+import copy
 from einops import rearrange, repeat
+
+class Encoder(nn.Module):
+    def __init__(self, 
+                dim,
+                n_layer,
+                n_head,
+                mlp_dim,
+                eps,
+                drop,
+                attn_drop,
+                is_visualize
+                ):
+        super().__init__()
+        self.is_visualize = is_visualize
+        self.layer = nn.ModuleList()
+        
+        for _ in range(n_layer):
+            layer = Block(
+                        dim=dim,
+                        n_layer=n_layer,
+                        n_head=n_head,
+                        mlp_dim=mlp_dim,
+                        eps=eps,
+                        drop=drop,
+                        attn_drop=attn_drop,
+                        is_visualize=is_visualize
+                        )
+            self.layer.append(copy.deepcopy(layer))
+
+    def forward(self, x):
+        attn_weights = []
+        for layer_block in self.layer:
+            x, weights = layer_block(x)
+            if self.is_visualize:
+                attn_weights.append(weights)
+        
+        return x, attn_weights
 
 class ViT(nn.Module):
     def __init__(self, image_size,
@@ -34,8 +72,7 @@ class ViT(nn.Module):
                                    dim=dim)
 
         # block of transformers encoder
-        self.blocks = nn.Sequential(*[
-                        Block(
+        self.encoder = Encoder(
                             dim=dim,
                             n_layer=n_layer,
                             n_head=n_head,
@@ -44,9 +81,7 @@ class ViT(nn.Module):
                             drop=drop_rate,
                             attn_drop=attn_drop_rate,
                             is_visualize=is_visualize
-                           )
-                        for i in range(n_layer)
-                ])
+                        )
 
         self.pos_embedding = nn.Parameter(torch.zeros(1, (n_patch + 1), dim))
         self.cls_token = nn.Parameter(torch.zeros(1, 1, dim))
@@ -64,20 +99,20 @@ class ViT(nn.Module):
 
     def forward(self, img):
         x = self.patch_embedding(img)
-        print(x.shape)
+        #print(x.shape)
         b, n, _ = x.shape
 
         cls_tokens = self.cls_token.expand(b, -1, -1)
 
         # Prepend x_class to the sequence of embedded patches
         x = torch.cat((cls_tokens, x), dim=1) # [b, (n + 1), dim]
-        print(x.shape)
+        #print(x.shape)
         # # Add pos embedding
         x += self.pos_embedding # [b, (n + 1), dim]
         x = self.dropout(x)
-        print(x.shape)
-        x, weights = self.blocks(x)
-        print(x.shape)
+        #print(x.shape)
+        x, weights = self.encoder(x)
+        #print(x.shape)
         x = self.norm(x)
         x = self.to_latent(x[:, 0])
         x = self.head(x)

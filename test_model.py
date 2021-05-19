@@ -33,7 +33,8 @@ if __name__ == '__main__':
 
 
     
-    img = torch.randn(1, 3, 224, 224)
+    img = torch.randn(10, 3, 224, 224)
 
     pred, _ = model(img.to('cuda'))
+    print(pred.shape)
     

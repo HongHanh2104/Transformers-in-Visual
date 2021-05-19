@@ -90,7 +90,7 @@ def train(config):
                 mlp_dim=config['model']['mlp_dim'],
                 is_visualize=config['model']['is_visualize']
             )
-
+    print('Test without init weights')
     model = model.to(device)
 
     # Train from pretrained if it is not None
