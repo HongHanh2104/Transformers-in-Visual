@@ -58,24 +58,26 @@ class ViT(nn.Module):
 
         # Weight init
         # head_bias = 0.
-        trunc_normal_(self.pos_embedding, std=.02)
-        trunc_normal_(self.cls_token, std=.02)
-        self.apply(_init_vit_weights)
+        # trunc_normal_(self.pos_embedding, std=.02)
+        # trunc_normal_(self.cls_token, std=.02)
+        # self.apply(_init_vit_weights)
 
     def forward(self, img):
         x = self.patch_embedding(img)
+        print(x.shape)
         b, n, _ = x.shape
 
         cls_tokens = self.cls_token.expand(b, -1, -1)
 
         # Prepend x_class to the sequence of embedded patches
         x = torch.cat((cls_tokens, x), dim=1) # [b, (n + 1), dim]
-        
+        print(x.shape)
         # # Add pos embedding
         x += self.pos_embedding # [b, (n + 1), dim]
         x = self.dropout(x)
-
+        print(x.shape)
         x, weights = self.blocks(x)
+        print(x.shape)
         x = self.norm(x)
         x = self.to_latent(x[:, 0])
         x = self.head(x)
