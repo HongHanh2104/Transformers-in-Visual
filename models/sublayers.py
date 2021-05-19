@@ -1,17 +1,6 @@
 import torch
 from torch import nn
 
-from einops import rearrange
-
-# class LayerNorm(nn.Module):
-#     def __init__(self, dim, fn):
-#         super().__init__()
-#         self.layernorm = nn.LayerNorm(dim)
-#         self.fn = fn
-    
-#     def forward(self, x, **kwargs):
-#         return self.fn(self.layernorm(x), **kwargs)
-
 class MLP(nn.Module):
     def __init__(self, dim, mlp_dim, drop=0.):
         super().__init__()
@@ -46,7 +35,7 @@ class ScaledDotProductAttention(nn.Module):
         # Step 1: dot product q with k^T to compute similarity
         # k_tranpose: [b, h, head_dim, n]
         # attn: [b, h, n_q, n_k]
-        k_T = rearrange(k, 'b h n d -> b h d n')
+        k_T = k.transpose(-2, -1)
         attn = (q @ k_T) * self.scale
         
         # Step 2: Pass to softmax to make [0, 1] range
@@ -80,21 +69,21 @@ class MultiHeadAttention(nn.Module):
     def forward(self, x): 
         # x: [b, n, dim] 
         #print('oeoe: ', len(x))
-        b, n, _ = x.shape
+        b, n, c = x.shape
         
         #  Step 1: dot product with weight matrices 
-        qkv = self.W_qkv(x).chunk(3, dim=-1)
+        qkv = self.W_qkv(x).reshape(b, n, 3, self.n_head, c // self.n_head).permute(2, 0, 3, 1, 4)
         
         # Step 2: split by number of heads
         # [b, head, n, head_dim]
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = self.n_head), qkv)
+        q, k, v = qkv[0], qkv[1], qkv[2]
         
         # Step 3: scale dot product
         score, attn = self.attention(q, k, v)
         weights = attn if self.is_visualize else None
         
         # Step 4: concat and pass to linear layer
-        score = rearrange(score, 'b h n d -> b n (h d)')
+        score = score.transpose(1, 2).reshape(b, n, c)
         score = self.proj(score)
         score = self.proj_drop(score)
 

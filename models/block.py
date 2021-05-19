@@ -33,14 +33,16 @@ class Block(nn.Module):
                         mlp_dim=mlp_dim,
                         drop=drop
                         )
+
+        self.drop_path = nn.Identity()
         
     
     def forward(self, x):
         attn_weights = []
         x = x[0] if isinstance(x, tuple) else x
-        x, weights = self.attn(self.norm1(x))
+        x, weights = self.drop_path(self.attn(self.norm1(x)))
         x += x 
-        x = x + self.mlp(self.norm2(x)) 
+        x = x + self.drop_path(self.mlp(self.norm2(x)))
         if self.is_visualize:
             attn_weights.append(weights)
         return x, attn_weights

@@ -66,30 +66,20 @@ def train(config):
                             num_workers=8
     )  
 
-    # transform = torchvision.transforms.Compose(
-    #         [torchvision.transforms.RandomHorizontalFlip(),
-    #         torchvision.transforms.RandomRotation(10, resample=PIL.Image.BILINEAR),
-    #         torchvision.transforms.RandomAffine(8, translate=(.15,.15)),
-    #         torchvision.transforms.ToTensor(),
-    #         ])
-
-
-    # train_dataset = torchvision.datasets.CIFAR10('./data/test', train=True,
-    #                                     download=True, transform=transform)
-
-    # test_dataset = torchvision.datasets.CIFAR10('./data/test', train=False,
-    #                                     download=True, transform=transform)
-
-    # train_loader = DataLoader(train_dataset, batch_size=10,
-    #                                         shuffle=True)
-
-    # val_loader = DataLoader(test_dataset, batch_size=10,
-    #                                         shuffle=False)
-
-
+    
     # Define model
     random.seed(config['seed'])
     print('Building model ...')
+    # model = VisionTransformer(
+    #             img_size=config['model']['img_size'], 
+    #             patch_size=config['model']['patch_size'], 
+    #             num_classes=config['model']['n_classes'], 
+    #             embed_dim=config['model']['dim'], 
+    #             depth=config['model']['n_layer'], 
+    #             num_heads=config['model']['n_head'], 
+    #             mlp_ratio=2.,
+    #             )
+
     model = ViT(
                 image_size=config['model']['img_size'], 
                 patch_size=config['model']['patch_size'], 
@@ -99,7 +89,8 @@ def train(config):
                 n_head=config['model']['n_head'], 
                 mlp_dim=config['model']['mlp_dim'],
                 is_visualize=config['model']['is_visualize']
-                )
+            )
+
     model = model.to(device)
 
     # Train from pretrained if it is not None
