@@ -1,17 +1,19 @@
 id: ViT
 seed: 2104
-pretrained_path: checkpoints/ViT-2021_05_11-11_32_05
-model_filename: best_bleu-val_acc=0.61.pth
+pretrained_path: trained/ViT-DogCatDataset-lr:0.0001-2021_05_19-10_02_23-with_bias
+model_filename: best_acc-val_acc=0.769.pth
 model:
-    img_size: 32
-    patch_size: 4
-    n_classes: 10
-    dim: 64
+    img_size: 224
+    patch_size: 16
+    n_classes: 2
+    dim: 512
     n_head: 8
     n_layer: 6
-    mlp_dim: 128
+    mlp_dim: 1024
     is_visualize: True
 dataset:
-    root_dir: data/cifar10/images
+    root_dir: data/dogcat/test
     test:
         k: 5
+result:
+    root_dir: results/

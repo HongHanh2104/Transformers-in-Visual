@@ -14,10 +14,10 @@ trainer:
     nepochs: 200
     val_step: 1
     log_step: 30
-    lr: !!float 1e-4
+    lr: !!float 1e-3
 optimizer:
     adam_eps: !!float 1e-8
-    patience: 10
+    patience: 5
     warmup: 10
     clip: 1.0
     weight_decay: !!float 0.0
