@@ -16,7 +16,6 @@ import yaml
 import csv
 
 
-
 def predict(device, path, model, dataset, save_path):
     pred_list = []
     conf_list = []
@@ -38,9 +37,7 @@ def predict(device, path, model, dataset, save_path):
         conf_list.append(probs[0, rank[0, 0].item()].item())
     # Save file
     save_csv(save_path, 'result.csv', dataset, pred_list, conf_list)
-        # for idx in rank[0, :3]:
-        #     print(f'{sample}: True label: {lbl} - {CIFAR_LABELS[lbl]}, Predicted label: {idx.item()} - {CIFAR_LABELS[idx.item()]} with {probs[0, idx.item()]:.5f}')
-
+        
 def save_csv(path, filename, img_list, pred_list, conf_list):
     with open(os.path.join(path, filename), 'w') as f:
         writer = csv.writer(f, delimiter='\t')
@@ -128,4 +125,4 @@ if __name__ == '__main__':
     print(f'The model has {parameters} trainable parameters.')
     
     #predict(device, img_dir, model, dataset, save_path)
-    compare_results('result-resnet.csv', 'result.csv')
+    #compare_results('result-resnet.csv', 'result.csv')

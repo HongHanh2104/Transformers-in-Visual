@@ -16,4 +16,4 @@ dataset:
     test:
         k: 5
 result:
-    root_dir: results/
+    root_dir: attn_results/

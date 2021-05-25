@@ -68,7 +68,7 @@ class MultiHeadAttention(nn.Module):
         
     def forward(self, x): 
         # x: [b, n, dim] 
-        #print('oeoe: ', len(x))
+        #print(x.shape)
         b, n, c = x.shape
         
         #  Step 1: dot product with weight matrices 

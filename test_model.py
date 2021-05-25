@@ -25,7 +25,7 @@ if __name__ == '__main__':
               n_layer=6, 
               n_head=8, 
               mlp_dim=1024,
-              is_visualize=False)
+              is_visualize=True)
 
     model = model.to('cuda')
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
 
     
-    img = torch.randn(10, 3, 224, 224)
+    img = torch.randn(1, 3, 224, 224)
 
     pred, _ = model(img.to('cuda'))
     print(pred.shape)
