@@ -9,6 +9,7 @@ import argparse
 import yaml
 import glob
 import csv
+import random
 from collections import defaultdict
 
 from PIL import Image
@@ -17,7 +18,8 @@ import matplotlib.pyplot as plt
 from models.model import ViT
 
 # Image files that want to visualize attention
-FILES = ['10', '304', '315', '336', '486']
+LENGTH = 100
+FILES = []
 
 def attn2mask(device, attn_mat_list):
     attn_mat = torch.stack(attn_mat_list).squeeze(1) # [n_stack, h, (patch_size + 1), (patch_size + 1)]
@@ -39,7 +41,7 @@ def attn2mask(device, attn_mat_list):
         joint_attns[i] = aug_attn_mat[i] @ joint_attns[i - 1]
     
     # Attention from the output to the input
-    v = joint_attns[-1]
+    v = joint_attns[0]
     grid_size = int(np.sqrt(aug_attn_mat.shape[-1]))
     mask = v[0, 1:].reshape(grid_size, grid_size).detach().cpu().numpy()
     mask = mask / mask.max() 
@@ -88,6 +90,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config')
     parser.add_argument('--folder')
+    parser.add_argument('--csv')
     args = parser.parse_args()
 
     # Load config file
@@ -125,6 +128,13 @@ if __name__ == '__main__':
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'The model has {parameters} trainable parameters.')
     
+    # Choose 100 images
+    with open(os.path.join('results', args.csv + '.csv'), 'r') as file:
+        reader = csv.reader(file)
+        lists = [row[0] for row in reader]
+    
+    FILES = random.sample(lists, k = LENGTH)
+
     process(device, model, img_path, save_path, True)
 
     # img = Image.open('test.png').convert('RGB')
