@@ -125,4 +125,5 @@ if __name__ == '__main__':
     print(f'The model has {parameters} trainable parameters.')
     
     #predict(device, img_dir, model, dataset, save_path)
-    #compare_results('result-resnet.csv', 'result.csv')
+    
+    

@@ -71,7 +71,8 @@ def process(device, model, img_path, save_path):
         mask = attn2mask(device, attn_map)
         #plt.imshow(mask, cmap='hot', interpolation='nearest')
         #plt.savefig(os.path.join(save_path, item + '_heatmap.png'))
-        
+        #print(np.array(img).shape, img.size)
+        #break
         mask = resize(mask, img_size)[:, :, np.newaxis]
         
         #plt.imshow(mask, cmap='hot', interpolation='nearest')

@@ -12,8 +12,10 @@ model:
     mlp_dim: 1024
     is_visualize: True
 dataset:
-    root_dir: data/dogcat/test
-    test:
-        k: 5
+    root_dir: data/dogcat/
+    val:
+        batch_size: 1
+        shuffle: False
+        num_workers: 8
 result:
     root_dir: attn_results/
