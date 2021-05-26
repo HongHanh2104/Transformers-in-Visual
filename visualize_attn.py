@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from models.model import ViT
 
 # Image files that want to visualize attention
-FILES = ['1', '3', '4', '7', '21']
+FILES = ['10', '304', '315', '336', '486']
 
 def attn2mask(device, attn_mat_list):
     attn_mat = torch.stack(attn_mat_list).squeeze(1) # [n_stack, h, (patch_size + 1), (patch_size + 1)]
@@ -39,7 +39,7 @@ def attn2mask(device, attn_mat_list):
         joint_attns[i] = aug_attn_mat[i] @ joint_attns[i - 1]
     
     # Attention from the output to the input
-    v = joint_attns[0]
+    v = joint_attns[-1]
     grid_size = int(np.sqrt(aug_attn_mat.shape[-1]))
     mask = v[0, 1:].reshape(grid_size, grid_size).detach().cpu().numpy()
     mask = mask / mask.max() 
@@ -60,33 +60,34 @@ def _to_img_tensor(img):
     img_tensor = img_tensor.unsqueeze(0)
     return img_tensor
 
-def process(device, model, img_path, save_path):
+def save_mask(mask, filename, save_path):
+    plt.imshow(mask)
+    plt.axis('off')
+    plt.savefig(os.path.join(save_path, filename + '_mask.png'))
+
+def process(device, model, img_path, save_path, is_mask=False):
     #pred_list = []
-    for item in FILES:   #len(img_list)):
+    for item in FILES:  
         img = Image.open(os.path.join(img_path, item + '.jpg')).convert('RGB')
         img_size = (np.array(img).shape[:2]) 
         img_tensor = _to_img_tensor(img).to(device)
         _, attn_map = model(img_tensor)
-        #print(attn_map[0][:, 0].shape)
-        mask = attn2mask(device, attn_map)
-        #plt.imshow(mask, cmap='hot', interpolation='nearest')
-        #plt.savefig(os.path.join(save_path, item + '_heatmap.png'))
-        #print(np.array(img).shape, img.size)
-        #break
-        mask = resize(mask, img_size)[:, :, np.newaxis]
         
-        #plt.imshow(mask, cmap='hot', interpolation='nearest')
-        #plt.savefig(os.path.join(save_path, item + '_heatmap_resize.png'))
-        #print(mask.size, img.size)
+        mask = attn2mask(device, attn_map)
+        
+        if is_mask:
+            mask = resize(mask, img_size)
+            save_mask(mask, item, save_path)
+        
+        mask = resize(mask, img_size)[:, :, np.newaxis]
         result = (mask * img).astype('uint8')
-        #plt.imshow(mask)
-        #plt.savefig(os.path.join(save_path, item + '_mask_0.png'))
-        #save_img(result, item + '_and_mask', save_path)
+        save_img(result, item, save_path)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config')
+    parser.add_argument('--folder')
     args = parser.parse_args()
 
     # Load config file
@@ -100,11 +101,12 @@ if __name__ == '__main__':
 
     save_path = os.path.join(config['result']['root_dir'], 
                              config['pretrained_path'].split('/')[1],
-                             config['model_filename'][:-4])
-    os.makedirs(save_path, exist_ok=True)   
+                             config['model_filename'][:-4],
+                             args.folder)
+    os.makedirs(save_path, exist_ok=True) 
     
     # Load images
-    img_path = config['dataset']['root_dir']
+    img_path = os.path.join(config['dataset']['root_dir'], 'test')
     
     #Load model
     model_path = os.path.join(config['pretrained_path'], config['model_filename'])
@@ -123,7 +125,7 @@ if __name__ == '__main__':
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'The model has {parameters} trainable parameters.')
     
-    process(device, model, img_path, save_path)
+    process(device, model, img_path, save_path, True)
 
     # img = Image.open('test.png').convert('RGB')
     # img_size = img.size

@@ -94,7 +94,7 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+# PEP 582; used
 __pypackages__/
 
 # Celery stuff
@@ -139,6 +139,7 @@ cython_debug/
 
 # My folder
 attn_results/
+attn_results_test/
 checkpoints/
 data/
 tmp/
