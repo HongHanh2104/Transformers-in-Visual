@@ -144,6 +144,7 @@ checkpoints/
 data/
 tmp/
 test.png
+test_1.jpg
 backup/
 trained/
 results/

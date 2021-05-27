@@ -3,7 +3,9 @@ from torch import nn
 
 from models.block import Block
 from models.embedding import PatchEmbedding
+from utils.helpers import np2th
 from models.weight_init import trunc_normal_
+
 
 import copy
 from einops import rearrange, repeat
@@ -108,6 +110,7 @@ class ViT(nn.Module):
         
         # Add pos embedding
         x += self.pos_embedding # [b, (patch_size + 1), dim]
+        
         x = self.dropout(x)
         
         x, weights = self.encoder(x)
@@ -116,6 +119,39 @@ class ViT(nn.Module):
         
         x = self.head(x)
         return x, weights
+
+    def load_from(self, weights, custom=True):
+        with torch.no_grad():
+            if custom:
+                nn.init.zeros_(self.head.weight)
+                nn.init.zeros_(self.head.bias)
+            else:
+                self.head.weight.copy_(np2th(weights['head/kernel']).t())
+                self.head.bias.copy_(np2th(weights['head/bias']).t())
+            #print(self.patch_embedding.to_patch_embedding.weight.shape)
+            #print(np2th(weights['embedding/kernel'], conv=True).shape)
+            self.patch_embedding.to_patch_embedding.weight.copy_(
+                        np2th(weights['embedding/kernel'], conv=True))
+            self.patch_embedding.to_patch_embedding.bias.copy_(
+                        np2th(weights['embedding/bias']))
+            self.cls_token.copy_(np2th(weights['cls']))
+            self.norm.weight.copy_(np2th(weights['Transformer/encoder_norm/bias']))
+
+            pretrain_pos_embed = np2th(weights['Transformer/posembed_input/pos_embedding'])
+            pos_embed = self.pos_embedding
+            if pretrain_pos_embed.size() == pos_embed.size():
+                self.pos_embedding.copy_(pretrain_pos_embed)
+            else:
+                raise ValueError
+            
+            for bname, block in self.encoder.named_children():
+                for uname, unit in block.named_children():
+                    unit.load_from(weights, n_block=uname)
+            
+
+
+        
+
 
     def _init_weights(self, m):
         # this fn left here for compat with downstream users

@@ -2,6 +2,8 @@ import torch
 from models.model import ViT
 import torch.nn.functional as F
 
+import numpy as np
+
 from timm.models.vision_transformer import VisionTransformer
 
 if __name__ == '__main__':
@@ -21,16 +23,16 @@ if __name__ == '__main__':
     model = ViT(image_size=224, 
               patch_size=16, 
               n_class=2, 
-              dim=512, 
-              n_layer=6, 
-              n_head=8, 
-              mlp_dim=1024,
-              is_visualize=True)
-
+              dim=768, 
+              n_layer=12, 
+              n_head=12, 
+              mlp_dim=3072,
+              is_visualize=False)
+    model.load_from(np.load('trained/pre-trained/ViT-B_16.npz'), custom=True)
     model = model.to('cuda')
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'The model has {parameters} trainable parameters.')
-
+    #print(model)
 
     
     img = torch.randn(1, 3, 224, 224)

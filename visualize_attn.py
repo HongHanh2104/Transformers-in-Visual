@@ -19,7 +19,7 @@ from models.model import ViT
 
 # Image files that want to visualize attention
 LENGTH = 100
-FILES = []
+FILES = ['test_1']
 
 def attn2mask(device, attn_mat_list):
     attn_mat = torch.stack(attn_mat_list).squeeze(1) # [n_stack, h, (patch_size + 1), (patch_size + 1)]
@@ -70,7 +70,8 @@ def save_mask(mask, filename, save_path):
 def process(device, model, img_path, save_path, is_mask=False):
     #pred_list = []
     for item in FILES:  
-        img = Image.open(os.path.join(img_path, item + '.jpg')).convert('RGB')
+        #img = Image.open(os.path.join(img_path, item + '.jpg')).convert('RGB')
+        img = Image.open(item + '.jpg').convert('RGB')
         img_size = (np.array(img).shape[:2]) 
         img_tensor = _to_img_tensor(img).to(device)
         _, attn_map = model(img_tensor)
@@ -129,11 +130,11 @@ if __name__ == '__main__':
     print(f'The model has {parameters} trainable parameters.')
     
     # Choose 100 images
-    with open(os.path.join('results', args.csv + '.csv'), 'r') as file:
-        reader = csv.reader(file)
-        lists = [row[0] for row in reader]
+    # with open(os.path.join('results', args.csv + '.csv'), 'r') as file:
+    #     reader = csv.reader(file)
+    #     lists = [row[0] for row in reader]
     
-    FILES = random.sample(lists, k = LENGTH)
+    # FILES = random.sample(lists, k = LENGTH)
 
     process(device, model, img_path, save_path, True)
 

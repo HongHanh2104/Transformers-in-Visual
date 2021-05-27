@@ -1,26 +1,28 @@
 id: ViT
 seed: 2104
-pretrained_path: null
+pretrained_path: trained/pre-trained/ViT-B_16.npz
 model:
     img_size: 224
     patch_size: 16
     n_classes: 2
-    dim: 512
-    n_head: 8
-    n_layer: 6
-    mlp_dim: 1024
+    dim: 768
+    n_head: 12
+    n_layer: 12
+    mlp_dim: 3072
+    drop_rate: 0.1
+    attn_drop_rate: 0.0
     is_visualize: False
 trainer:
-    nepochs: 200
+    nepochs: 250
     val_step: 1
     log_step: 30
-    lr: !!float 1e-3
+    lr: !!float 1e-4
+    weight_decay: !!float 0.1
 optimizer:
     adam_eps: !!float 1e-8
     patience: 5
     warmup: 10
-    clip: 1.0
-    weight_decay: !!float 0.0
+    clip: 1.0    
     factor: 0.5
 dataset:
     name: DogCatDataset
@@ -30,4 +32,4 @@ dataset:
         shuffle: True
         clip_grads: True
     val:
-        batch_size: 10
+        batch_size: 1

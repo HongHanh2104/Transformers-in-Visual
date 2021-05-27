@@ -1,5 +1,6 @@
-from datasets.cifar10 import CIFAR10Dataset
-from datasets.dogcat import DogCatDataset
+#from datasets.cifar10 import CIFAR10Dataset
+#from datasets.dogcat import DogCatDataset
+from datasets.flower102 import Flower102Dataset
 from torch.utils.data import DataLoader
 import torch
 import torchvision
@@ -12,13 +13,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--root')
 args = parser.parse_args()
 
-dataset = DogCatDataset(root_path=args.root,
+dataset = Flower102Dataset(
+                        root_path=args.root,
+                        n_classes=2,
                         phase='train')
-dataloader = DataLoader(
-                        dataset, 
-                        batch_size=4,
-                        shuffle=True
-                        )
+# dataloader = DataLoader(
+#                         dataset, 
+#                         batch_size=4,
+#                         shuffle=True
+#                         )
 #print(len(dataloader))
 
 model = ViT(image_size=224, 
@@ -37,13 +40,13 @@ print(f'The model has {parameters} trainable parameters.')
 
 # print('len: ', len(dataloader))
 
-for i, (img, lbl) in enumerate(tqdm(dataloader)):
-    img = img.to('cuda')
-    lbl = lbl.to('cuda')
-    out, _ = model(img)
-    print(img.shape, lbl.shape, out.shape)
-    if i == 0:
-        break
+# for i, (img, lbl) in enumerate(tqdm(dataloader)):
+#     img = img.to('cuda')
+#     lbl = lbl.to('cuda')
+#     out, _ = model(img)
+#     print(img.shape, lbl.shape, out.shape)
+#     if i == 0:
+#         break
 
 
 
