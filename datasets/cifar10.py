@@ -45,18 +45,18 @@ class CIFAR10Dataset(Dataset):
     def _train_augmentation(self, img):
         # resample=Image.BILINEAR
         img = tvtf.Compose(
-            [tvtf.RandomHorizontalFlip(),
-            tvtf.RandomRotation(10, interpolation=tvtf.InterpolationMode.BILINEAR),
-            tvtf.RandomAffine(8, translate=(.15, .15)),
-            tvtf.ToTensor()]
+            [
+                tvtf.Resize((224, 224)),
+                tvtf.RandomResizedCrop(224),
+                tvtf.RandomHorizontalFlip(),
+                tvtf.ToTensor()]
         )(img)
         return img
 
     def _val_augmentation(self, img):
         img = tvtf.Compose(
-            [tvtf.RandomHorizontalFlip(),
-            tvtf.RandomRotation(10, interpolation=tvtf.InterpolationMode.BILINEAR),
-            tvtf.RandomAffine(8, translate=(.15, .15)),
-            tvtf.ToTensor()]
+            [
+                tvtf.Resize((224, 224)),
+                tvtf.ToTensor()]
         )(img)
         return img

@@ -1,14 +1,13 @@
 import torch
 from torch import nn
 
+from models.resnet import ResNetv2
 from models.block import Block
 from models.embedding import PatchEmbedding
 from utils.helpers import np2th
 from models.weight_init import trunc_normal_
 
-
 import copy
-from einops import rearrange, repeat
 
 class Encoder(nn.Module):
     def __init__(self, 
@@ -58,14 +57,25 @@ class ViT(nn.Module):
                  channels=3,
                  drop_rate=0.,
                  attn_drop_rate=0.,
+                 hybrid_blocks=0, 
+                 hybrid_width_factor=0,
                  is_visualize=False):
         super().__init__()
 
+        self.hybrid = False
         self.image_size = self._check_size(image_size)
-        self.patch_size = self._check_size(patch_size)
-
-        grid_size = (self.image_size[0] // self.patch_size[0]), (self.image_size[1] // self.patch_size[1])
-        n_patch = grid_size[0] * grid_size[1]
+        
+        if hybrid_blocks != 0 and hybrid_width_factor != 0:
+            self.hybrid = True
+            self.patch_size = (1, 1)
+            n_patch = (self.image_size[0] // 16) * (self.image_size[1] // 16) 
+            self.hybrid_model = ResNetv2(blocks=hybrid_blocks,
+                                         width_factor=hybrid_width_factor)
+            channels = self.hybrid_model.width * 16
+        else:
+            self.patch_size = self._check_size(patch_size)
+            grid_size = (self.image_size[0] // self.patch_size[0]), (self.image_size[1] // self.patch_size[1])
+            n_patch = grid_size[0] * grid_size[1]
 
         self.patch_embedding = PatchEmbedding(
                                    image_size=self.image_size,
@@ -99,8 +109,12 @@ class ViT(nn.Module):
         # trunc_normal_(self.cls_token, std=.02)
         # self.apply(_init_vit_weights)
 
-    def forward(self, img):
-        x = self.patch_embedding(img) # [b, patch_size, dim]
+    def forward(self, x):
+        # x is an image
+        if self.hybrid:
+            x = self.hybrid_model(x) # [b, in_channels, ]
+            
+        x = self.patch_embedding(x) # [b, patch_size, dim]
         b, n, _ = x.shape
 
         cls_tokens = self.cls_token.expand(b, -1, -1)
@@ -130,19 +144,23 @@ class ViT(nn.Module):
                 self.head.bias.copy_(np2th(weights['head/bias']).t())
             #print(self.patch_embedding.to_patch_embedding.weight.shape)
             #print(np2th(weights['embedding/kernel'], conv=True).shape)
+            
+            #if self.patch_size[0] == 16:
             self.patch_embedding.to_patch_embedding.weight.copy_(
                         np2th(weights['embedding/kernel'], conv=True))
             self.patch_embedding.to_patch_embedding.bias.copy_(
                         np2th(weights['embedding/bias']))
+        
             self.cls_token.copy_(np2th(weights['cls']))
             self.norm.weight.copy_(np2th(weights['Transformer/encoder_norm/bias']))
 
             pretrain_pos_embed = np2th(weights['Transformer/posembed_input/pos_embedding'])
             pos_embed = self.pos_embedding
+            #print(pretrain_pos_embed.size(), pos_embed.size())
             if pretrain_pos_embed.size() == pos_embed.size():
                 self.pos_embedding.copy_(pretrain_pos_embed)
-            else:
-                raise ValueError
+            # else:
+            #     raise ValueError
             
             for bname, block in self.encoder.named_children():
                 for uname, unit in block.named_children():

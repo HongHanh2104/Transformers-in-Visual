@@ -1,8 +1,8 @@
 from models.model import ViT
 #from timm.models.vision_transformer import VisionTransformer
 import torchvision.models as models
-#from datasets.cifar10 import CIFAR10Dataset
-from datasets.dogcat import DogCatDataset
+from datasets.cifar10 import CIFAR10Dataset
+#from datasets.dogcat import DogCatDataset
 #from metrics import AccuracyMetric, BLEUMetric
 #from optimizers import NoamOptimizer
 from trainer import Trainer
@@ -29,25 +29,17 @@ def train(config):
     dev_id = 'cuda' if torch.cuda.is_available() else 'cpu'
     device = torch.device(dev_id)
     
-    # Get pretrained model
-    pretrained_path = config['pretrained_path']
-    pretrained = None
-    if pretrained_path != None:
-        pretrained = torch.load(pretrained_path, map_location=dev_id)
-        for item in ["model"]:
-            config[item] = pretrained["config"][item]
-
     name_id = config['id']   
     
     # Build dataset
     random.seed(config['seed'])
     print('Building dataset ...')
-    train_dataset = DogCatDataset(
+    train_dataset = CIFAR10Dataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='train'
                     )
-    val_dataset = DogCatDataset(
+    val_dataset = CIFAR10Dataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='val'
@@ -89,18 +81,20 @@ def train(config):
                 n_layer=config['model']['n_layer'], 
                 n_head=config['model']['n_head'], 
                 mlp_dim=config['model']['mlp_dim'],
+                drop_rate=config['model']['drop_rate'],
+                attn_drop_rate=config['model']['attn_drop_rate'],
                 is_visualize=config['model']['is_visualize']
             )
 
+    # Get pretrained model
+    pretrained_path = config['pretrained_path']
+    if pretrained_path != None:
+        model.load_from(np.load(pretrained_path), custom=True)
+        print("Load from pre-trained")
     # model = models.resnet50(pretrained=True)
     # dim_in = model.fc.in_features
     # model.fc = nn.Linear(dim_in, config['model']['n_classes'])
     model = model.to(device)
-
-    # Train from pretrained if it is not None
-    if pretrained is not None:
-        model.load_state_dict(pretrained['model_state_dict'])
-    
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'The model has {parameters} trainable parameters.')
 

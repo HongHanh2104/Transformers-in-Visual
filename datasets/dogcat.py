@@ -60,8 +60,6 @@ class DogCatDataset(Dataset):
         img = tvtf.Compose(
             [
                 tvtf.Resize((224, 224)),
-                #tvtf.RandomResizedCrop(224),
-                #tvtf.RandomHorizontalFlip(),
                 tvtf.ToTensor()
             ]
         )(img)
