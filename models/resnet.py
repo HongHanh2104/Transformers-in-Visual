@@ -2,6 +2,9 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+from utils.helpers import np2th
+
+from os.path import join
 from collections import OrderedDict
 
 class StdConv2d(nn.Conv2d):
@@ -57,6 +60,36 @@ class PreActBottleneck(nn.Module):
         x = self.groupnorm3(self.conv3(x))
         x = self.relu(residual + x)
         return x
+    
+    def load_from(self, weights, blocks, units):
+        self.conv1.weight.copy_(np2th(weights[
+            join(blocks, units, 'conv1/kernel')], conv=True))
+        self.conv2.weight.copy_(np2th(weights[
+            join(blocks, units, 'conv2/kernel')], conv=True))
+        self.conv3.weight.copy_(np2th(weights[
+            join(blocks, units, 'conv3/kernel')], conv=True))
+
+        self.groupnorm1.weight.copy_(np2th(weights[
+            join(blocks, units, 'gn1/scale')]).view(-1))
+        self.groupnorm1.bias.copy_(np2th(weights[
+            join(blocks, units, 'gn1/bias')]).view(-1))
+        self.groupnorm2.weight.copy_(np2th(weights[
+            join(blocks, units, 'gn2/scale')]).view(-1))
+        self.groupnorm2.bias.copy_(np2th(weights[
+            join(blocks, units, 'gn2/bias')]).view(-1))
+        self.groupnorm3.weight.copy_(np2th(weights[
+            join(blocks, units, 'gn3/scale')]).view(-1))
+        self.groupnorm3.bias.copy_(np2th(weights[
+            join(blocks, units, 'gn3/bias')]).view(-1))
+
+        if self.stride != 1 or self.cin != self.cout:
+            self.downsample.weight.copy_(np2th(weights[
+                join(blocks, units, 'conv_proj/kernel')], conv=True))
+            self.groupnorm_proj.weight.copy_(np2th(weights[
+                join(blocks, units, 'gn_proj/scale')]).view(-1))
+            self.groupnorm_proj.bias.copy_(np2th(weights[
+                join(blocks, units, 'gn_proj/bias')]).view(-1))
+            
 
 class ResNetv2(nn.Module):
     def __init__(self, blocks, width_factor=1):

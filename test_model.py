@@ -32,7 +32,7 @@ if __name__ == '__main__':
               hybrid_width_factor=1,
               is_visualize=False)
     
-    #model.load_from(np.load('trained/pre-trained/ViT-B_16.npz'), custom=True)
+    model.load_from(np.load('trained/pre-trained/R50+ViT-B_16.npz'), custom=True)
     model = model.to('cuda')
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'The model has {parameters} trainable parameters.')

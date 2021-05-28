@@ -4,6 +4,7 @@ from torch import nn
 from models.resnet import ResNetv2
 from models.block import Block
 from models.embedding import PatchEmbedding
+
 from utils.helpers import np2th
 from models.weight_init import trunc_normal_
 
@@ -166,7 +167,20 @@ class ViT(nn.Module):
                 for uname, unit in block.named_children():
                     unit.load_from(weights, n_block=uname)
             
+            if self.hybrid:
+                self.hybrid_model.root.conv.weight.copy_(
+                    np2th(weights['conv_root/kernel'], conv=True)
+                )
+                self.hybrid_model.root.groupnorm.weight.copy_(
+                    np2th(weights['gn_root/scale']).view(-1)
+                )
+                self.hybrid_model.root.groupnorm.bias.copy_(
+                    np2th(weights['gn_root/bias']).view(-1)
+                )
 
+                for bname, block in self.hybrid_model.body.named_children():
+                    for uname, unit in block.named_children():
+                        unit.load_from(weights, blocks=bname, units=uname)
 
         
 
