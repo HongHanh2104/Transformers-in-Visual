@@ -1,7 +1,7 @@
 #from datasets.cifar10 import CIFAR10Dataset
 #from datasets.dogcat import DogCatDataset
 import torch.nn as nn
-from datasets.flower102 import Flower102Dataset
+from datasets.pet import PetDataset
 from torch.utils.data import DataLoader
 import torch
 import torchvision
@@ -14,22 +14,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--root')
 args = parser.parse_args()
 
-dataset = Flower102Dataset(
+dataset = PetDataset(
                         root_path=args.root,
-                        nclasses=102,
+                        nclasses=37,
                         phase='train')
 
 dataloader = DataLoader(
                         dataset, 
-                        batch_size=1,
+                        batch_size=8,
                         shuffle=True,
-                        num_workers=1
+                        num_workers=8
                         )
 print(len(dataset))
 
 model = ViT(image_size=224, 
               patch_size=16, 
-              n_class=102, 
+              n_class=37, 
               dim=768, 
               n_layer=12, 
               n_head=12, 

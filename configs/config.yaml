@@ -4,7 +4,7 @@ pretrained_path: trained/pre-trained/ViT-B_16.npz
 model:
     img_size: 224
     patch_size: 16
-    n_classes: 102
+    n_classes: 37
     dim: 768
     n_head: 12
     n_layer: 12
@@ -28,8 +28,8 @@ optimizer:
     clip: 1.0    
     factor: 0.5
 dataset:
-    name: Flower102Dataset
-    root_dir: data/flower_data/
+    name: PetDataset
+    root_dir: data/pet_data/
     train:
         batch_size: 8
         shuffle: True

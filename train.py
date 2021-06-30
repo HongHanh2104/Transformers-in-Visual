@@ -1,7 +1,7 @@
 from models.model import ViT
 #from timm.models.vision_transformer import VisionTransformer
 import torchvision.models as models
-from datasets.flower102 import Flower102Dataset
+from datasets.pet import PetDataset
 #from datasets.dogcat import DogCatDataset
 from trainer import Trainer
 
@@ -32,12 +32,12 @@ def train(config):
     # Build dataset
     random.seed(config['seed'])
     print('Building dataset ...')
-    train_dataset = Flower102Dataset(
+    train_dataset = PetDataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='train'
                     )
-    val_dataset = Flower102Dataset(
+    val_dataset = PetDataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='val'
