@@ -33,7 +33,7 @@ class Trainer():
         self.train_id += ('-' + self.config['dataset']['name'] + '-' +  
                          'lr:' + str(self.config['trainer']['lr']) + '-' + 
                          datetime.now().strftime('%Y_%m_%d-%H_%M_%S') +
-                         '-base-pretrain') 
+                         '-pretrain') 
 
         self.save_dir = os.path.join('checkpoints', self.train_id)
         if not os.path.exists(self.save_dir):
@@ -68,7 +68,7 @@ class Trainer():
             # 1: Load sources, targets
             img = img.to(self.device)
             lbl = lbl.to(self.device)
-
+            #print(lbl)
             # 4: Clear gradients from previous iteration
             self.optimizer.zero_grad()
 

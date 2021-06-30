@@ -7,41 +7,46 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 
-class DogCatDataset(Dataset):
+class Flower102Dataset(Dataset):
     def __init__(self, 
                  root_path=None,
-                 nclasses=2,
+                 nclasses=102,
                  phase='train'):
         super().__init__()
 
         assert root_path is not None, "Missing root_path, should be a CIFAR10 dataset!"
 
         self.root_path = Path(root_path)
-        self.img_path = self.root_path / phase
+        self.path = self.root_path / phase
 
-        self.image_files = [f for f in sorted(os.listdir(self.img_path))]
+        self.labels = [lbl for lbl in sorted(os.listdir(self.path))]
+        
+        self.images = []
+        for f in self.labels:
+            for img in os.listdir(os.path.join(self.path, f)):
+                self.images.append(f + '-' + img)
         self.nclasses = nclasses
         self.phase = phase
-
+    
     def __getitem__(self, idx):
-        img = self.image_files[idx]
-        #print(img)
-        path = os.path.join(self.img_path, img)
+        lbl = self.images[idx].split('-')[0]
+        img = self.images[idx].split('-')[1]
+        
+        path = os.path.join(self.path, lbl, img)
         img = Image.open(path).convert('RGB')
 
         if self.phase == 'train':
             img = self._train_augmentation(img)
         elif self.phase == 'val':
             img = self._val_augmentation(img)
-        else:
-            img = tvtf.ToTensor()(img)
+        # else:
+        #     img = tvtf.ToTensor()(img)
         
-        lbl = self.image_files[idx].split('.')[0] # get the first char
-        lbl = 1 if lbl == 'cat' else 0
+        lbl = int(lbl) - 1
         return img, lbl
 
     def __len__(self):
-        return len(self.image_files)
+        return len(self.images)
 
     def _train_augmentation(self, img):
         # resample=Image.BILINEAR

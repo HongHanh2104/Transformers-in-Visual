@@ -1,10 +1,8 @@
 from models.model import ViT
 #from timm.models.vision_transformer import VisionTransformer
 import torchvision.models as models
-from datasets.cifar10 import CIFAR10Dataset
+from datasets.flower102 import Flower102Dataset
 #from datasets.dogcat import DogCatDataset
-#from metrics import AccuracyMetric, BLEUMetric
-#from optimizers import NoamOptimizer
 from trainer import Trainer
 
 import torch
@@ -34,12 +32,12 @@ def train(config):
     # Build dataset
     random.seed(config['seed'])
     print('Building dataset ...')
-    train_dataset = CIFAR10Dataset(
+    train_dataset = Flower102Dataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='train'
                     )
-    val_dataset = CIFAR10Dataset(
+    val_dataset = Flower102Dataset(
                           root_path=config['dataset']['root_dir'],
                           nclasses=config['model']['n_classes'],
                           phase='val'
@@ -55,23 +53,13 @@ def train(config):
                             val_dataset,
                             batch_size=config['dataset']['val']['batch_size'],
                             shuffle=False,
-                            num_workers=8
+                            num_workers=1
     )  
 
     
     # Define model
     random.seed(config['seed'])
     print('Building model ...')
-
-    # model = VisionTransformer(
-    #             img_size=config['model']['img_size'], 
-    #             patch_size=config['model']['patch_size'], 
-    #             num_classes=config['model']['n_classes'], 
-    #             embed_dim=config['model']['dim'], 
-    #             depth=config['model']['n_layer'], 
-    #             num_heads=config['model']['n_head'], 
-    #             mlp_ratio=2.,
-    #             )
 
     model = ViT(
                 image_size=config['model']['img_size'], 
@@ -102,10 +90,6 @@ def train(config):
     random.seed(config['seed'])
     loss = nn.CrossEntropyLoss()
     loss = loss.to(device)
-
-    # Define metrics
-    #random.seed(config['seed'])
-    #metric = BLEUMetric()
 
     # Define Optimizer 
     random.seed(config['seed'])

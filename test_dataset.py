@@ -1,5 +1,6 @@
 #from datasets.cifar10 import CIFAR10Dataset
 #from datasets.dogcat import DogCatDataset
+import torch.nn as nn
 from datasets.flower102 import Flower102Dataset
 from torch.utils.data import DataLoader
 import torch
@@ -15,18 +16,20 @@ args = parser.parse_args()
 
 dataset = Flower102Dataset(
                         root_path=args.root,
-                        n_classes=2,
+                        nclasses=102,
                         phase='train')
-# dataloader = DataLoader(
-#                         dataset, 
-#                         batch_size=4,
-#                         shuffle=True
-#                         )
-#print(len(dataloader))
+
+dataloader = DataLoader(
+                        dataset, 
+                        batch_size=1,
+                        shuffle=True,
+                        num_workers=1
+                        )
+print(len(dataset))
 
 model = ViT(image_size=224, 
               patch_size=16, 
-              n_class=2, 
+              n_class=102, 
               dim=768, 
               n_layer=12, 
               n_head=12, 
@@ -38,15 +41,23 @@ model = model.to('cuda')
 parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f'The model has {parameters} trainable parameters.')
 
-# print('len: ', len(dataloader))
+print('len: ', len(dataloader))
+optimizer = torch.optim.Adam(model.parameters(), 
+                    lr=0.0001,
+                )
 
-# for i, (img, lbl) in enumerate(tqdm(dataloader)):
-#     img = img.to('cuda')
-#     lbl = lbl.to('cuda')
-#     out, _ = model(img)
-#     print(img.shape, lbl.shape, out.shape)
-#     if i == 0:
-#         break
+loss = nn.CrossEntropyLoss()
+loss = loss.to('cuda')
+
+for i, (img, lbl) in enumerate(tqdm(dataloader)):
+    #print(img)
+    img = img.to('cuda')
+    lbl = lbl.to('cuda')
+    optimizer.zero_grad()
+    out, _ = model(img)
+    _l = loss(out, lbl)
+    optimizer.step()
+    
 
 
 

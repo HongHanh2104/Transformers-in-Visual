@@ -4,7 +4,7 @@ pretrained_path: trained/pre-trained/ViT-B_16.npz
 model:
     img_size: 224
     patch_size: 16
-    n_classes: 10
+    n_classes: 102
     dim: 768
     n_head: 12
     n_layer: 12
@@ -13,13 +13,13 @@ model:
     attn_drop_rate: 0.0
     is_visualize: False
     hybrid:
-        n_layer: (3, 4, 9)
-        width_factor: 1
+        n_layer: 0 #[3, 4, 9]
+        width_factor: 0 #1
 trainer:
-    nepochs: 250
+    nepochs: 50
     val_step: 1
     log_step: 30
-    lr: !!float 1e-5
+    lr: !!float 1e-4
     weight_decay: !!float 0.1
 optimizer:
     adam_eps: !!float 1e-8
@@ -28,10 +28,10 @@ optimizer:
     clip: 1.0    
     factor: 0.5
 dataset:
-    name: CIFAR10Dataset
-    root_dir: data/cifar10/images
+    name: Flower102Dataset
+    root_dir: data/flower_data/
     train:
-        batch_size: 10
+        batch_size: 8
         shuffle: True
         clip_grads: True
     val:
