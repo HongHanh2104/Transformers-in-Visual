@@ -4,7 +4,7 @@ pretrained_path: trained/pre-trained/ViT-B_16.npz
 model:
     img_size: 224
     patch_size: 16
-    n_classes: 37
+    n_classes: 100
     dim: 768
     n_head: 12
     n_layer: 12
@@ -16,7 +16,7 @@ model:
         n_layer: 0 #[3, 4, 9]
         width_factor: 0 #1
 trainer:
-    nepochs: 50
+    nepochs: 100
     val_step: 1
     log_step: 30
     lr: !!float 1e-4
@@ -28,11 +28,11 @@ optimizer:
     clip: 1.0    
     factor: 0.5
 dataset:
-    name: PetDataset
-    root_dir: data/pet_data/
+    name: CIFARDataset
+    root_dir: data/
     train:
         batch_size: 8
         shuffle: True
         clip_grads: True
     val:
-        batch_size: 1
+        batch_size: 5

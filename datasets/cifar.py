@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 
-class CIFAR10Dataset(Dataset):
+class CIFARDataset(Dataset):
     def __init__(self, 
                  root_path=None,
                  nclasses=10,
@@ -16,13 +16,13 @@ class CIFAR10Dataset(Dataset):
 
         assert root_path is not None, "Missing root_path, should be a CIFAR10 dataset!"
 
-        self.root_path = Path(root_path)
-        self.img_path = self.root_path / phase
+        self.root_path = Path(root_path) / 'cifar100' if nclasses == 100 else Path(root_path) / 'cifar10'
+        
+        self.img_path = self.root_path / 'images' / phase
 
         self.image_files = [f for f in sorted(os.listdir(self.img_path))]
         self.nclasses = nclasses
         self.phase = phase
-        
     
     def __getitem__(self, idx):
         img = self.image_files[idx]
@@ -47,7 +47,6 @@ class CIFAR10Dataset(Dataset):
         img = tvtf.Compose(
             [
                 tvtf.Resize((224, 224)),
-                tvtf.RandomResizedCrop(224),
                 tvtf.RandomHorizontalFlip(),
                 tvtf.ToTensor()]
         )(img)
