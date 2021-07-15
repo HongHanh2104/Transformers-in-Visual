@@ -30,11 +30,11 @@ class Trainer():
         
         # Train ID 
         self.train_id = self.config['id']
-        self.train_id += ('-' + self.config['dataset']['name'] + '100' + '-' +  
+        self.train_id += ('-' + self.config['dataset']['name'] + '-' +  
                          'lr:' + str(self.config['trainer']['lr']) + '-' + 
-                         datetime.now().strftime('%Y_%m_%d-%H_%M_%S') +
-                         '-pretrain') 
-        
+                         datetime.now().strftime('%Y_%m_%d-%H_%M_%S') + '-'
+                         + 'no-pretrain-vit' + '-' + 'SGD-32-4-patch') 
+        print(self.train_id)
         self.save_dir = os.path.join('checkpoints', self.train_id)
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)

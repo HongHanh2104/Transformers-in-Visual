@@ -22,9 +22,9 @@ class PatchEmbedding(nn.Module):
         _, _, h, w = img.shape
         # assert h == self.img_h and w == self.img_w, \
         #     f"Input image size ({h}*{w}) doesn't match model ({self.img_h}*{self.img_w})."
-
+        # This step is linear projection of flattened patches
         x = self.to_patch_embedding(img)
-        x = x.flatten(2).transpose(1, 2) # [b, patch_size, dim]
+        x = x.flatten(2).transpose(1, 2) # [b, n_patch, dim]
         return x
 
 

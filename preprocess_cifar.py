@@ -90,17 +90,17 @@ def load_images_labels_100(path, save_path, phase):
     filenames = [f.decode('utf8') for f in phase_data[b'filenames']]
     phase_lbls = phase_data[b'fine_labels']
     
-    images_data = phase_data[b'data']
-    images = []
-    for d in images_data:
-        image = np.zeros((32, 32, 3), dtype=np.uint8)
-        image[..., 0] = np.reshape(d[:1024], (32, 32)) # R
-        image[..., 1] = np.reshape(d[1024:2048], (32, 32)) # G
-        image[..., 2] = np.reshape(d[2048:], (32, 32)) # B
-        images.append(image)
+    # images_data = phase_data[b'data']
+    # images = []
+    # for d in images_data:
+    #     image = np.zeros((32, 32, 3), dtype=np.uint8)
+    #     image[..., 0] = np.reshape(d[:1024], (32, 32)) # R
+    #     image[..., 1] = np.reshape(d[1024:2048], (32, 32)) # G
+    #     image[..., 2] = np.reshape(d[2048:], (32, 32)) # B
+    #     images.append(image)
     
-    for i in range(len(images)):
-        plt.imsave(os.path.join(save_path, phase, str(phase_lbls[i]) + '_' + filenames[i]), images[i])
+    # for i in range(len(images)):
+    #     plt.imsave(os.path.join(save_path, phase, str(phase_lbls[i]) + '_' + filenames[i]), images[i])
     
 
 
@@ -124,9 +124,9 @@ if __name__ == '__main__':
     # save_cifar_image(args.dir, img_dir, 'test')
     # print("Complete extract test images.")
 
-    split_train_val(img_dir)
+    #split_train_val(img_dir)
 
     #split_by_class(img_dir, 'test')
 
-    #load_images_labels_100(args.dir, img_dir, phase='test')
+    load_images_labels_100(args.dir, img_dir, phase='test')
     

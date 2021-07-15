@@ -2,13 +2,12 @@ from models.model import ViT
 #from timm.models.vision_transformer import VisionTransformer
 import torchvision.models as models
 from datasets.cifar import CIFARDataset
-#from datasets.dogcat import DogCatDataset
 from trainer import Trainer
 
 import torch
 import torch.nn as nn
 from torch import optim
-from torch.optim import Adam 
+from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
 import torchvision
 
@@ -71,17 +70,21 @@ def train(config):
                 mlp_dim=config['model']['mlp_dim'],
                 drop_rate=config['model']['drop_rate'],
                 attn_drop_rate=config['model']['attn_drop_rate'],
-                is_visualize=config['model']['is_visualize']
-            )
+                is_visualize=config['model']['is_visualize'],
+                hybrid_blocks=config['model']['hybrid']['n_layer'],
+                hybrid_width_factor=config['model']['hybrid']['width_factor']
+                )
 
     # Get pretrained model
     pretrained_path = config['pretrained_path']
     if pretrained_path != None:
         model.load_from(np.load(pretrained_path), custom=True)
         print("Load from pre-trained")
+    
     # model = models.resnet50(pretrained=True)
     # dim_in = model.fc.in_features
     # model.fc = nn.Linear(dim_in, config['model']['n_classes'])
+    
     model = model.to(device)
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'The model has {parameters} trainable parameters.')
@@ -93,8 +96,10 @@ def train(config):
 
     # Define Optimizer 
     random.seed(config['seed'])
-    optimizer = Adam(model.parameters(), 
+    optimizer = SGD(model.parameters(), 
                     lr=config['trainer']['lr'],
+                    momentum=0.9,
+                    #weight_decay=config['trainer']['weight_decay'],
                 )
                     
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -115,7 +120,7 @@ def train(config):
                       optimizer=optimizer,
                       scheduler=scheduler,
                       config=config
-                    )
+                     )
     
     # Start to train 
     random.seed(config['seed'])

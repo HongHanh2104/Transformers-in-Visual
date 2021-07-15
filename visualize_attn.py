@@ -18,8 +18,28 @@ import matplotlib.pyplot as plt
 from models.model import ViT
 
 # Image files that want to visualize attention
-LENGTH = 100
-FILES = ['test_1']
+LENGTH = 10
+FILES = []
+
+def save_mask(mask, filename, save_path):
+    plt.imshow(mask)
+    plt.axis('off')
+    plt.savefig(os.path.join(save_path, filename + '_mask.png'))
+
+def save_img(img, img_name, save_path):
+    img = Image.fromarray(img)
+    img.save(os.path.join(save_path, img_name + '.png'))
+
+def _to_img_tensor(img):
+    img_tensor = tvtf.Compose(
+            [
+                tvtf.Resize((224, 224)),
+                tvtf.ToTensor()
+            ]
+        )(img)
+
+    img_tensor = img_tensor.unsqueeze(0)
+    return img_tensor
 
 def attn2mask(device, attn_mat_list):
     attn_mat = torch.stack(attn_mat_list).squeeze(1) # [n_stack, h, (patch_size + 1), (patch_size + 1)]
@@ -38,40 +58,20 @@ def attn2mask(device, attn_mat_list):
     joint_attns[0] = aug_attn_mat[0]
     
     for i in range(1, aug_attn_mat.shape[0]):
-        joint_attns[i] = aug_attn_mat[i] @ joint_attns[i - 1]
+        joint_attns[i] = torch.matmul(aug_attn_mat[i], joint_attns[i - 1])
     
     # Attention from the output to the input
-    v = joint_attns[0]
+    v = joint_attns[-1]
     grid_size = int(np.sqrt(aug_attn_mat.shape[-1]))
     mask = v[0, 1:].reshape(grid_size, grid_size).detach().cpu().numpy()
     mask = mask / mask.max() 
     return mask
 
-def save_img(img, img_name, save_path):
-    img = Image.fromarray(img)
-    img.save(os.path.join(save_path, img_name + '.png'))
-
-def _to_img_tensor(img):
-    img_tensor = tvtf.Compose(
-            [
-                tvtf.Resize((224, 224)),
-                tvtf.ToTensor()
-            ]
-        )(img)
-
-    img_tensor = img_tensor.unsqueeze(0)
-    return img_tensor
-
-def save_mask(mask, filename, save_path):
-    plt.imshow(mask)
-    plt.axis('off')
-    plt.savefig(os.path.join(save_path, filename + '_mask.png'))
-
 def process(device, model, img_path, save_path, is_mask=False):
     #pred_list = []
     for item in FILES:  
-        #img = Image.open(os.path.join(img_path, item + '.jpg')).convert('RGB')
-        img = Image.open(item + '.jpg').convert('RGB')
+        img = Image.open(os.path.join(img_path, item + '.png')).convert('RGB')
+        #img = Image.open(item).convert('RGB')
         img_size = (np.array(img).shape[:2]) 
         img_tensor = _to_img_tensor(img).to(device)
         _, attn_map = model(img_tensor)
@@ -82,7 +82,7 @@ def process(device, model, img_path, save_path, is_mask=False):
             mask = resize(mask, img_size)
             save_mask(mask, item, save_path)
         
-        mask = resize(mask, img_size)[:, :, np.newaxis]
+        mask = resize(mask, img_size)[..., np.newaxis]
         result = (mask * img).astype('uint8')
         save_img(result, item, save_path)
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config')
     parser.add_argument('--folder')
-    parser.add_argument('--csv')
+    #parser.add_argument('--csv')
     args = parser.parse_args()
 
     # Load config file
@@ -104,38 +104,39 @@ if __name__ == '__main__':
 
 
     save_path = os.path.join(config['result']['root_dir'], 
-                             config['pretrained_path'].split('/')[1],
+                             config['pretrained_path'].split('/')[2],
                              config['model_filename'][:-4],
                              args.folder)
     os.makedirs(save_path, exist_ok=True) 
     
-    # Load images
-    img_path = os.path.join(config['dataset']['root_dir'], 'test')
-    
     #Load model
     model_path = os.path.join(config['pretrained_path'], config['model_filename'])
-    model = ViT(image_size=config['model']['img_size'], 
+    model = ViT(
+                image_size=config['model']['img_size'], 
                 patch_size=config['model']['patch_size'], 
                 n_class=config['model']['n_classes'], 
                 dim=config['model']['dim'], 
                 n_layer=config['model']['n_layer'], 
                 n_head=config['model']['n_head'], 
                 mlp_dim=config['model']['mlp_dim'],
-                is_visualize=config['model']['is_visualize']
-            )
+                drop_rate=config['model']['drop_rate'],
+                attn_drop_rate=config['model']['attn_drop_rate'],
+                is_visualize=config['model']['is_visualize'],
+                hybrid_blocks=config['model']['hybrid']['n_layer'],
+                hybrid_width_factor=config['model']['hybrid']['width_factor']
+                )
     
     model = model.to(device)
     model.load_state_dict(torch.load(model_path)['model_state_dict'])
     parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'The model has {parameters} trainable parameters.')
     
-    # Choose 100 images
-    # with open(os.path.join('results', args.csv + '.csv'), 'r') as file:
-    #     reader = csv.reader(file)
-    #     lists = [row[0] for row in reader]
+    # Load images
+    img_path = os.path.join(config['dataset']['root_dir'], 'test', 'airplane')
+    images = [os.path.splitext(i)[0] for i in os.listdir(img_path)]
     
-    # FILES = random.sample(lists, k = LENGTH)
-
+    FILES =  random.sample(images, k = LENGTH)
+    #print(FILES)
     process(device, model, img_path, save_path, True)
 
     # img = Image.open('test.png').convert('RGB')

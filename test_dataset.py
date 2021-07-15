@@ -1,7 +1,7 @@
 #from datasets.cifar10 import CIFAR10Dataset
 #from datasets.dogcat import DogCatDataset
 import torch.nn as nn
-from datasets.cifar import CIFARDataset
+from datasets.flower102 import Flower102Dataset
 from torch.utils.data import DataLoader
 import torch
 import torchvision
@@ -14,10 +14,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--root')
 args = parser.parse_args()
 
-dataset = CIFARDataset(
+dataset = Flower102Dataset(
                         root_path=args.root,
-                        nclasses=100,
-                        phase='train')
+                        nclasses=102,
+                        phase='val')
 
 dataloader = DataLoader(
                         dataset, 
@@ -27,36 +27,36 @@ dataloader = DataLoader(
                         )
 print(len(dataset))
 
-model = ViT(image_size=224, 
-              patch_size=16, 
-              n_class=100, 
-              dim=768, 
-              n_layer=12, 
-              n_head=12, 
-              mlp_dim=3072,
-              drop_rate=0.1,
-              attn_drop_rate=0.0,
-              is_visualize=False)
-model = model.to('cuda')
-parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-print(f'The model has {parameters} trainable parameters.')
+# model = ViT(image_size=224, 
+#               patch_size=16, 
+#               n_class=100, 
+#               dim=768, 
+#               n_layer=12, 
+#               n_head=12, 
+#               mlp_dim=3072,
+#               drop_rate=0.1,
+#               attn_drop_rate=0.0,
+#               is_visualize=False)
+# model = model.to('cuda')
+# parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+# print(f'The model has {parameters} trainable parameters.')
 
-print('len: ', len(dataloader))
-optimizer = torch.optim.Adam(model.parameters(), 
-                    lr=0.0001,
-                )
+# print('len: ', len(dataloader))
+# optimizer = torch.optim.Adam(model.parameters(), 
+#                     lr=0.0001,
+#                 )
 
-loss = nn.CrossEntropyLoss()
-loss = loss.to('cuda')
+# loss = nn.CrossEntropyLoss()
+# loss = loss.to('cuda')
 
-for i, (img, lbl) in enumerate(tqdm(dataloader)):
-    #print(img)
-    img = img.to('cuda')
-    lbl = lbl.to('cuda')
-    optimizer.zero_grad()
-    out, _ = model(img)
-    _l = loss(out, lbl)
-    optimizer.step()
+# for i, (img, lbl) in enumerate(tqdm(dataloader)):
+#     #print(img)
+#     img = img.to('cuda')
+#     lbl = lbl.to('cuda')
+#     optimizer.zero_grad()
+#     out, _ = model(img)
+#     _l = loss(out, lbl)
+#     optimizer.step()
     
 
 

@@ -1,21 +1,26 @@
 id: ViT
 seed: 2104
-pretrained_path: trained/ViT-DogCatDataset-lr:0.0001-2021_05_19-10_02_23-with_bias
-model_filename: best_acc-val_acc=0.769.pth
+pretrained_path: trained/pretrain_SGD/ViT-CIFARDataset10-lr:0.0001-2021_07_02-13_24_46-pretrain-SGD
+model_filename: best_acc-val_acc=0.979.pth
 model:
     img_size: 224
     patch_size: 16
-    n_classes: 2
-    dim: 512
-    n_head: 8
-    n_layer: 6
-    mlp_dim: 1024
+    n_classes: 10
+    dim: 768
+    n_head: 12
+    n_layer: 12
+    mlp_dim: 3072
+    drop_rate: 0.1
+    attn_drop_rate: 0.0
     is_visualize: True
+    hybrid:
+        n_layer: 0 #[3, 4, 9]
+        width_factor: 0 #1
 dataset:
-    root_dir: data/dogcat
+    root_dir: data/cifar10/images
     val:
         batch_size: 1
         shuffle: False
         num_workers: 8
 result:
-    root_dir: attn_results_test/
+    root_dir: attn_results

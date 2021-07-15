@@ -1,10 +1,10 @@
 id: ViT
 seed: 2104
-pretrained_path: trained/pre-trained/ViT-B_16.npz
+pretrained_path: null #trained/pre-trained/ViT-B_16.npz
 model:
-    img_size: 224
-    patch_size: 16
-    n_classes: 100
+    img_size: 32
+    patch_size: 4
+    n_classes: 10
     dim: 768
     n_head: 12
     n_layer: 12
@@ -14,16 +14,16 @@ model:
     is_visualize: False
     hybrid:
         n_layer: 0 #[3, 4, 9]
-        width_factor: 0 #1
+        width_factor: 0  #1
 trainer:
-    nepochs: 100
+    nepochs: 150
     val_step: 1
     log_step: 30
     lr: !!float 1e-4
     weight_decay: !!float 0.1
 optimizer:
     adam_eps: !!float 1e-8
-    patience: 5
+    patience: 10
     warmup: 10
     clip: 1.0    
     factor: 0.5
@@ -35,4 +35,4 @@ dataset:
         shuffle: True
         clip_grads: True
     val:
-        batch_size: 5
+        batch_size: 1

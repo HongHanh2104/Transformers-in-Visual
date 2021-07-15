@@ -46,16 +46,22 @@ class CIFARDataset(Dataset):
         # resample=Image.BILINEAR
         img = tvtf.Compose(
             [
-                tvtf.Resize((224, 224)),
+                tvtf.RandomCrop(32, padding=4, padding_mode='reflect'),
                 tvtf.RandomHorizontalFlip(),
                 tvtf.ToTensor()]
         )(img)
+        # img = tvtf.Compose(
+        #     [
+        #         tvtf.Resize((224, 224)),
+        #         tvtf.RandomHorizontalFlip(),
+        #         tvtf.ToTensor()]
+        # )(img)
         return img
 
     def _val_augmentation(self, img):
         img = tvtf.Compose(
             [
-                tvtf.Resize((224, 224)),
+                #tvtf.Resize((224, 224)),
                 tvtf.ToTensor()]
         )(img)
         return img
